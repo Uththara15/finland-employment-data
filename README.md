@@ -4,7 +4,7 @@ An interactive multi-tab analytics dashboard covering Finnish unemployment rates
 
 Built entirely in vanilla HTML, CSS and JavaScript. No framework, no build step, no backend. Open the file in a browser and it works.
 
-Live demo: https://uththara15.github.io/finland-jobs-tracker/
+Live demo: https://uththara15.github.io/finland-employment-data/
 
 ---
 
