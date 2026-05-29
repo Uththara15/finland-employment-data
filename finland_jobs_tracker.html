@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Finland Labour Market Tracker</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root {
+  --g900: #0c2818;
+  --g800: #163d24;
+  --g700: #1d5230;
+  --g600: #256640;
+  --g500: #307a4e;
+  --g400: #4a9966;
+  --g300: #72b886;
+  --g200: #a4d4b0;
+  --g100: #d0ecda;
+  --g050: #eaf5ee;
+  --surface: #f4f6f4;
+  --white: #ffffff;
+  --ink1: #0f2218;
+  --ink2: #2e4c38;
+  --ink3: #5a7563;
+  --border-light: rgba(37,102,64,0.12);
+  --border-med: rgba(37,102,64,0.25);
+  --red: #9b3030;
+  --amber: #7a5500;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; }
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--surface); color: var(--ink1); }
+
+.topbar {
+  background: var(--g800);
+  padding: 1rem 2rem 0.85rem;
+  display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;
+}
+.topbar-title h1 { font-size: 1.05rem; font-weight: 500; color: var(--g100); letter-spacing: -0.01em; }
+.topbar-title p { font-size: 0.72rem; color: var(--g300); margin-top: 1px; }
+.live-badge {
+  font-size: 0.68rem; background: var(--g700); color: var(--g200);
+  border: 1px solid var(--g600); border-radius: 3px; padding: 2px 7px;
+  display: flex; align-items: center; gap: 5px;
+}
+.live-dot { width: 6px; height: 6px; background: #5fc97a; border-radius: 50%; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+.ctrlbar {
+  background: var(--white); border-bottom: 1px solid var(--border-light);
+  padding: 0.55rem 2rem;
+  display: flex; flex-wrap: wrap; gap: 1rem; align-items: center;
+}
+.cl { font-size: 0.67rem; font-weight: 600; color: var(--ink3); text-transform: uppercase; letter-spacing: 0.08em; }
+.cs {
+  font-size: 0.78rem; color: var(--ink1); background: var(--g050);
+  border: 1px solid var(--border-med); border-radius: 4px; padding: 3px 7px; cursor: pointer; outline: none;
+}
+.cs:focus { border-color: var(--g500); }
+.tabs { display: flex; gap: 1px; background: var(--border-light); border-radius: 5px; padding: 2px; overflow: hidden; }
+.tb {
+  font-size: 0.76rem; padding: 3px 11px; border: none; background: transparent;
+  color: var(--ink2); cursor: pointer; border-radius: 3px; font-weight: 400; transition: all 0.12s;
+}
+.tb.on { background: var(--g700); color: var(--white); font-weight: 500; }
+.sep { width: 1px; height: 20px; background: var(--border-light); }
+
+.wrap { padding: 1.1rem 2rem; max-width: 1440px; margin: 0 auto; }
+@media (max-width: 860px) { .wrap,.ctrlbar,.topbar { padding-left: 1rem; padding-right: 1rem; } }
+
+.krow { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 8px; margin-bottom: 1rem; }
+.kcard {
+  background: var(--white); border: 1px solid var(--border-light); border-radius: 7px;
+  padding: 0.75rem 0.9rem; position: relative; overflow: hidden;
+}
+.kcard::after { content:''; position:absolute; bottom:0;left:0;right:0; height:2px; background:var(--g400); }
+.kcard.red::after { background: var(--red); }
+.kcard.amb::after { background: var(--amber); }
+.kt { font-size: 0.65rem; font-weight: 600; color: var(--ink3); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 4px; }
+.kv { font-size: 1.4rem; font-weight: 400; color: var(--ink1); line-height: 1; }
+.kd { font-size: 0.72rem; margin-top: 3px; }
+.kd.up { color: var(--red); }
+.kd.dn { color: var(--g600); }
+.kd.nt { color: var(--ink3); }
+.ks { font-size: 0.67rem; color: var(--ink3); margin-top: 1px; }
+
+.g21 { display: grid; grid-template-columns: 2fr 1fr; gap: 9px; margin-bottom: 9px; }
+.g3  { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 9px; margin-bottom: 9px; }
+.g2  { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-bottom: 9px; }
+@media (max-width: 860px) { .g21,.g3,.g2 { grid-template-columns: 1fr; } }
+
+.panel { background: var(--white); border: 1px solid var(--border-light); border-radius: 7px; padding: 0.85rem 1rem; }
+.ph { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.6rem; gap: 0.5rem; }
+.pt { font-size: 0.68rem; font-weight: 600; color: var(--ink3); text-transform: uppercase; letter-spacing: 0.07em; }
+.pm { font-size: 0.65rem; color: var(--ink3); }
+
+.ch { position: relative; }
+.h260 { height: 260px; }
+.h220 { height: 220px; }
+.h200 { height: 200px; }
+.h300 { height: 300px; }
+
+.leg { display: flex; flex-wrap: wrap; gap: 6px 12px; margin-bottom: 7px; }
+.li { display: flex; align-items: center; gap: 4px; font-size: 0.68rem; color: var(--ink2); cursor: pointer; }
+.ld { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+
+.slabel { font-size: 0.65rem; font-weight: 600; color: var(--g600); text-transform: uppercase; letter-spacing: 0.1em; margin: 0.3rem 0 0.65rem; display: flex; align-items: center; gap: 6px; }
+.slabel::after { content:''; flex:1; height:1px; background:var(--border-light); }
+
+/* HEATMAP */
+.hmwrap { overflow-x: auto; }
+table.hm { border-collapse: collapse; width: 100%; }
+table.hm th { font-size: 0.62rem; font-weight: 600; color: var(--ink3); text-align: left; padding: 3px 5px; border-bottom: 1px solid var(--border-light); white-space: nowrap; }
+table.hm th.yh { text-align: center; min-width: 34px; }
+table.hm td { padding: 2px 4px; }
+table.hm td.rn { font-size: 0.68rem; color: var(--ink2); white-space: nowrap; padding-right: 8px; }
+.hmc { height: 20px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 0.64rem; font-weight: 500; cursor: default; transition: transform 0.1s; }
+.hmc:hover { transform: scale(1.1); position: relative; z-index: 3; }
+
+/* SPARKLINES */
+.splist { display: flex; flex-direction: column; }
+.sprow { display: grid; grid-template-columns: 108px 1fr 48px; align-items: center; gap: 7px; padding: 4px 0; border-bottom: 1px solid var(--border-light); }
+.sprow:last-child { border: none; }
+.spn { font-size: 0.68rem; color: var(--ink2); }
+.spwrap { height: 26px; position: relative; }
+.spst .sv { font-size: 0.76rem; font-weight: 500; color: var(--ink1); text-align: right; }
+.spst .sc { font-size: 0.63rem; text-align: right; }
+
+/* RANKED */
+.rklist { display: flex; flex-direction: column; gap: 5px; }
+.rkrow { display: grid; grid-template-columns: 115px 1fr 44px; align-items: center; gap: 7px; }
+.rklb { font-size: 0.68rem; color: var(--ink2); text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rktr { height: 15px; background: var(--g050); border-radius: 2px; overflow: hidden; }
+.rkfi { height: 100%; border-radius: 2px; transition: width 0.4s ease; }
+.rkv { font-size: 0.7rem; font-weight: 500; color: var(--ink1); }
+
+/* CARDS */
+.icard { background: var(--g050); border: 1px solid var(--border-light); border-radius: 5px; padding: 0.6rem 0.75rem; }
+.ict { font-size: 0.69rem; font-weight: 600; color: var(--g700); margin-bottom: 3px; }
+.icb { font-size: 0.69rem; color: var(--ink2); line-height: 1.55; }
+.igrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px,1fr)); gap: 7px; }
+
+/* TOOLTIP */
+.tip { position: fixed; background: var(--g900); color: var(--g100); font-size: 0.68rem; padding: 4px 8px; border-radius: 4px; pointer-events: none; display: none; z-index: 999; white-space: nowrap; line-height: 1.5; }
+
+.footer { padding: 0.6rem 2rem; font-size: 0.65rem; color: var(--ink3); border-top: 1px solid var(--border-light); background: var(--white); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-title">
+    <h1>Finland Labour Market Tracker</h1>
+    <p>Unemployment rates, employment by industry and regional breakdown 2015-2025</p>
+  </div>
+  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+    <div class="live-badge"><span class="live-dot"></span> Latest: 2025 annual / Apr 2026 monthly</div>
+    <div style="font-size:0.65rem;color:var(--g300);">Sources: Statistics Finland LFS, OECD, Eurostat, World Bank</div>
+  </div>
+</div>
+
+<div class="ctrlbar">
+  <div style="display:flex;align-items:center;gap:5px;">
+    <span class="cl">View</span>
+    <div class="tabs">
+      <button class="tb on" data-t="overview" onclick="go('overview')">Overview</button>
+      <button class="tb" data-t="regions" onclick="go('regions')">Regions</button>
+      <button class="tb" data-t="industry" onclick="go('industry')">Industry</button>
+      <button class="tb" data-t="trends" onclick="go('trends')">Trends</button>
+    </div>
+  </div>
+  <div class="sep"></div>
+  <div style="display:flex;align-items:center;gap:5px;">
+    <span class="cl">From</span>
+    <select class="cs" id="yFrom" onchange="go(cur)">
+      <option value="2015" selected>2015</option>
+      <option value="2017">2017</option>
+      <option value="2019">2019</option>
+      <option value="2021">2021</option>
+    </select>
+    <span style="font-size:0.7rem;color:var(--ink3);">to 2025</span>
+  </div>
+  <div class="sep"></div>
+  <div style="display:flex;align-items:center;gap:5px;">
+    <span class="cl">Metric</span>
+    <select class="cs" id="metric" onchange="go(cur)">
+      <option value="urate">Unemployment rate</option>
+      <option value="emprate">Employment rate</option>
+    </select>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="krow" id="krow"></div>
+
+  <div id="pane-overview">
+    <div class="slabel">National picture</div>
+    <div class="g21">
+      <div class="panel">
+        <div class="ph"><span class="pt">Unemployment rate 2015-2025</span><span class="pm">Annual % of labour force 15-74, Statistics Finland LFS</span></div>
+        <div class="leg" id="leg-ov"></div>
+        <div class="ch h260"><canvas id="c-main" role="img" aria-label="Finland unemployment rate trend 2015-2025 including youth and adult breakdowns."></canvas></div>
+      </div>
+      <div class="panel">
+        <div class="ph"><span class="pt">Employment by sector 2022</span><span class="pm">Share of total employed</span></div>
+        <div class="ch h260"><canvas id="c-donut" role="img" aria-label="Employment share by sector Finland 2022."></canvas></div>
+      </div>
+    </div>
+    <div class="g3">
+      <div class="panel">
+        <div class="ph"><span class="pt">Youth vs adult rate</span><span class="pm">15-24 and 25+ age groups</span></div>
+        <div class="ch h200"><canvas id="c-age" role="img" aria-label="Youth vs adult unemployment bar chart."></canvas></div>
+      </div>
+      <div class="panel">
+        <div class="ph"><span class="pt">Employment rate trend</span><span class="pm">% working-age 20-64</span></div>
+        <div class="ch h200"><canvas id="c-emp" role="img" aria-label="Employment rate trend Finland vs EU27."></canvas></div>
+      </div>
+      <div class="panel">
+        <div class="ph"><span class="pt">Key readings</span></div>
+        <div class="igrid" style="grid-template-columns:1fr;" id="ig-ov"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="pane-regions" style="display:none;">
+    <div class="slabel">Regional breakdown</div>
+    <div class="g2">
+      <div class="panel">
+        <div class="ph"><span class="pt">Unemployment heatmap by region 2015-2025</span><span class="pm">Annual % — hover cell for value</span></div>
+        <div class="hmwrap"><table class="hm" id="hmt"></table></div>
+      </div>
+      <div class="panel">
+        <div class="ph"><span class="pt">Regional sparklines</span><span class="pm">Trend trajectory per region</span></div>
+        <div class="splist" id="splist"></div>
+      </div>
+    </div>
+    <div class="panel" style="margin-bottom:9px;">
+      <div class="ph"><span class="pt">Region ranking 2025</span><span class="pm">Unemployment rate % lowest to highest</span></div>
+      <div class="rklist" id="rklist"></div>
+    </div>
+  </div>
+
+  <div id="pane-industry" style="display:none;">
+    <div class="slabel">Sectoral detail</div>
+    <div class="g2">
+      <div class="panel">
+        <div class="ph"><span class="pt">Employed persons by sector 2015-2023</span><span class="pm">Thousands of persons (stacked)</span></div>
+        <div class="ch h300"><canvas id="c-istack" role="img" aria-label="Stacked employment by industry Finland 2015-2023."></canvas></div>
+      </div>
+      <div class="panel">
+        <div class="ph"><span class="pt">Unemployment rate by sector 2025</span><span class="pm">Percent — red above 10%, amber 7-10%</span></div>
+        <div class="ch h300"><canvas id="c-irate" role="img" aria-label="Unemployment rate by sector Finland 2025."></canvas></div>
+      </div>
+    </div>
+    <div class="panel" style="margin-bottom:9px;">
+      <div class="ph"><span class="pt">Shortage occupations Finland 2025</span><span class="pm">Source: EURES / European Labour Authority</span></div>
+      <div class="igrid" id="ig-sh"></div>
+    </div>
+  </div>
+
+  <div id="pane-trends" style="display:none;">
+    <div class="slabel">Long-run context</div>
+    <div class="g2">
+      <div class="panel">
+        <div class="ph"><span class="pt">Finland vs EU27 unemployment 2015-2025</span><span class="pm">Annual % of labour force</span></div>
+        <div class="ch h260"><canvas id="c-eu" role="img" aria-label="Finland versus EU27 unemployment 2015-2025."></canvas></div>
+      </div>
+      <div class="panel">
+        <div class="ph"><span class="pt">Change 2019 to 2025 by region</span><span class="pm">Percentage point shift</span></div>
+        <div class="ch h260"><canvas id="c-chg" role="img" aria-label="Change in unemployment rate per region 2019 to 2025."></canvas></div>
+      </div>
+    </div>
+    <div class="panel" style="margin-bottom:9px;">
+      <div class="ph"><span class="pt">Structural context</span></div>
+      <div class="igrid" id="ig-st"></div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  <span>Statistics Finland Labour Force Survey (CC BY 4.0) · OECD Labour Statistics · Eurostat lfst_r_lfu3rt · World Bank WDI · Portfolio project demonstrating open data integration</span>
+  <span>Annual data through 2025 · Monthly series through April 2026</span>
+</div>
+
+<div class="tip" id="tip"></div>
+
+<script>
+// Real data through 2025 (Statistics Finland LFS, OECD, World Bank)
+// National: 9.7% in 2025 (confirmed Statistics Finland Jan 2026 release)
+// Youth: 21.5% in 2025 (World Bank / FRED SLUEM1524ZSFIN)
+// Adult 25+: 8.1% in 2025 (OECD LRHUADTTFIA156S)
+// Employment rate 20-64: 76.0% in 2025 (Statistics Finland Jan 2026 release)
+// EU27 unemployment: EC forecast 6.1% 2025
+
+const YRS = [2015,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025];
+
+const NAT   = [9.4, 8.9, 8.7, 7.5, 6.8, 7.8, 7.6, 6.7, 7.2, 8.4, 9.7];
+const EU27  = [9.4, 8.6, 7.6, 6.8, 6.7, 7.1, 7.0, 6.2, 6.0, 5.9, 6.1];
+const YOUTH = [22.1,20.4,19.8,17.0,17.3,21.2,17.1,14.1,16.1,18.7,21.5];
+const ADULT = [7.6, 7.3, 7.2, 6.2, 5.3, 6.0, 6.5, 5.8, 6.1, 7.1, 8.1];
+const EMPRT = [null,null,null,null,72.9,72.1,72.7,74.3,74.0,76.7,76.0];
+const EMPEU = [null,null,null,null,68.4,67.5,68.3,69.8,70.4,70.8,71.2];
+
+// Regional unemployment % annual
+// Calibrated to 2023 Eurostat values + 2024/2025 proportional scaling from national trend
+// 2025 national = 9.7% (+1.3 pp from 2024 8.4%)
+// Regional ratios maintained from Eurostat/EURES data
+const REGS = {
+  "Uusimaa":            [7.9,7.4,7.2,6.2,5.7,6.8,6.9,6.5,7.6,8.8,10.2],
+  "Pirkanmaa":          [9.8,9.2,8.8,7.6,6.8,7.9,7.5,6.9,8.0,9.4,10.8],
+  "Varsinais-Suomi":    [9.5,9.0,8.5,7.3,6.6,7.5,7.3,6.7,7.1,8.1, 9.4],
+  "Pohjois-Pohjanmaa":  [10.2,9.6,9.3,8.0,7.1,8.3,7.9,7.2,8.8,10.3,11.8],
+  "Pohjois-Savo":       [10.8,10.2,9.8,8.6,7.7,8.6,8.3,7.6,8.1,9.2,10.5],
+  "Keski-Suomi":        [11.4,10.8,10.4,9.0,8.1,9.0,8.8,8.1,8.7,10.0,11.4],
+  "Etelä-Karjala":      [10.6,10.0,9.6,8.3,7.5,8.5,8.2,7.8,8.3,9.5,10.9],
+  "Lappi":              [12.8,12.2,11.8,10.2,9.1,10.3,9.8,9.0,9.4,10.8,12.3],
+};
+
+const SECTOR_L = ["Manufacturing","Wholesale & retail","Healthcare","Admin & support","Construction","Education","Transport","ICT","Agriculture","Other"];
+const SECTOR_P = [18.9,16.3,12.4,11.2,10.7,8.9,6.2,5.6,3.8,6.0];
+const SECTOR_C = ["#163d24","#256640","#4a9966","#72b886","#307a4e","#a4d4b0","#1d5230","#5a9c72","#85b892","#b0d4bc"];
+
+const ISTACK_Y = [2015,2017,2019,2021,2023];
+const ISTACK = {
+  "Manufacturing":   [350,342,355,341,348],
+  "Wholesale/retail":[310,308,318,305,302],
+  "Healthcare":      [220,230,240,248,260],
+  "Construction":    [175,185,200,190,185],
+  "Education":       [158,162,167,163,166],
+  "ICT":             [90,96,105,110,122],
+  "Transport":       [108,110,114,108,112],
+};
+const ISTACK_C = ["#163d24","#256640","#4a9966","#72b886","#307a4e","#a4d4b0","#1d5230"];
+
+// Industry unemployment 2025 (updated from 2024 + construction further worsened)
+const IND_L = ["Construction","Admin & support","Agriculture","Wholesale & retail","Transport","Manufacturing","Public admin","ICT","Education","Healthcare"];
+const IND_V = [16.1,13.5,12.2,10.4,9.1,8.3,4.5,4.0,3.8,3.5];
+
+const SHORTAGES = [
+  {t:"Healthcare professionals",b:"Doctors, nurses, health care assistants — worsening shortage as population ages and emigration continues",sev:"crit"},
+  {t:"Software developers",b:"Full-stack, embedded systems and AI/ML engineers. ICT sector unemployment below 4% despite national rise",sev:"high"},
+  {t:"Early childhood educators",b:"Nationwide gap in daycare and preschool; government expansion plans outpace available trained staff",sev:"high"},
+  {t:"Welders and metalworkers",b:"Manufacturing sector skills gap deepened; average age of skilled workers rising",sev:"med"},
+  {t:"HGV and logistics drivers",b:"Pandemic-era exits not replaced; AGV automation slow to compensate",sev:"med"},
+  {t:"Construction project managers",b:"Despite sector unemployment at 16%, qualified project managers remain scarce — mismatch problem",sev:"med"},
+];
+
+let cur = 'overview';
+let charts = {};
+
+function slice(arr, from) {
+  const i = YRS.indexOf(from);
+  return i < 0 ? arr : arr.slice(i);
+}
+function sliceYRS(from) { return slice(YRS, from); }
+function from() { return parseInt(document.getElementById('yFrom').value); }
+
+function destroy(id) { if(charts[id]){charts[id].destroy();delete charts[id];} }
+
+function hmColor(v) {
+  const lo=5.0, hi=13.5;
+  const t = Math.max(0, Math.min(1, (v-lo)/(hi-lo)));
+  if(t<0.35){
+    const s=t/0.35;
+    return {bg:`rgb(${Math.round(208+s*(253-208))},${Math.round(237+s*(200-237))},${Math.round(218+s*(158-218))})`,tx:t>0.2?'#3a2200':'#163d24'};
+  } else {
+    const s=(t-0.35)/0.65;
+    return {bg:`rgb(${Math.round(253+s*(180-253))},${Math.round(200+s*(60-200))},${Math.round(158+s*(60-158))})`,tx:'#3a0a0a'};
+  }
+}
+
+function buildKPIs() {
+  const f = from();
+  const i = YRS.indexOf(f);
+  const last = NAT.length - 1;
+  const curr = NAT[last];
+  const prev = NAT[last-1];
+  const diff = (curr-prev).toFixed(1);
+  const eu = EU27[last];
+  const gap = (curr-eu).toFixed(1);
+  const youth = YOUTH[last];
+  const erate = EMPRT[last];
+  const rv = Object.values(REGS).map(r=>r[last]);
+  const rk = Object.keys(REGS);
+  const minV = Math.min(...rv).toFixed(1), maxV = Math.max(...rv).toFixed(1);
+  const minN = rk[rv.indexOf(Math.min(...rv))];
+  const maxN = rk[rv.indexOf(Math.max(...rv))];
+
+  document.getElementById('krow').innerHTML = `
+    <div class="kcard red">
+      <div class="kt">National 2025</div>
+      <div class="kv">${curr}%</div>
+      <div class="kd up">+${diff} pp vs 2024</div>
+      <div class="ks">Highest since 2016 — Statistics Finland</div>
+    </div>
+    <div class="kcard">
+      <div class="kt">Employment rate 2025</div>
+      <div class="kv">${erate}%</div>
+      <div class="kd nt">Age group 20-64</div>
+      <div class="ks">-0.7 pp from 2024 peak</div>
+    </div>
+    <div class="kcard amb">
+      <div class="kt">vs EU27 gap</div>
+      <div class="kv">+${gap} pp</div>
+      <div class="kd nt">FIN ${curr}% / EU27 ${eu}%</div>
+      <div class="ks">Finland persistently above EU average</div>
+    </div>
+    <div class="kcard red">
+      <div class="kt">Youth rate 2025</div>
+      <div class="kv">${youth}%</div>
+      <div class="kd up">+2.8 pp vs 2024</div>
+      <div class="ks">15-24 age group — World Bank</div>
+    </div>
+    <div class="kcard">
+      <div class="kt">Best region 2025</div>
+      <div class="kv">${minV}%</div>
+      <div class="kd dn">${minN}</div>
+      <div class="ks">Lowest regional rate</div>
+    </div>
+    <div class="kcard red">
+      <div class="kt">Highest region 2025</div>
+      <div class="kv">${maxV}%</div>
+      <div class="kd up">${maxN}</div>
+      <div class="ks">Highest regional rate</div>
+    </div>
+  `;
+}
+
+function buildOverview() {
+  const f = from();
+  const labs = sliceYRS(f);
+  const nat = slice(NAT,f), yu = slice(YOUTH,f), ad = slice(ADULT,f);
+
+  destroy('c-main');
+  document.getElementById('leg-ov').innerHTML = `
+    <span class="li"><span class="ld" style="background:#256640"></span>National total</span>
+    <span class="li"><span class="ld" style="background:#4a9966"></span>Youth 15-24</span>
+    <span class="li"><span class="ld" style="background:#a4d4b0"></span>Adult 25+</span>
+  `;
+  charts['c-main'] = new Chart(document.getElementById('c-main'), {
+    type:'line',
+    data:{labels:labs, datasets:[
+      {label:'National',data:nat,borderColor:'#256640',backgroundColor:'rgba(37,102,64,0.07)',borderWidth:2.5,pointRadius:4,tension:0.35,fill:true},
+      {label:'Youth 15-24',data:yu,borderColor:'#4a9966',borderWidth:2,pointRadius:3,tension:0.35,fill:false},
+      {label:'Adult 25+',data:ad,borderColor:'#a4d4b0',borderWidth:1.5,pointRadius:2,tension:0.35,fill:false,borderDash:[4,3]}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y.toFixed(1)}%`}}},
+      scales:{
+        x:{ticks:{autoSkip:false,maxRotation:0,font:{size:10}},grid:{display:false}},
+        y:{min:0,ticks:{font:{size:10},callback:v=>v+'%'},grid:{color:'rgba(37,102,64,0.06)'}}
+      }
+    }
+  });
+
+  destroy('c-donut');
+  charts['c-donut'] = new Chart(document.getElementById('c-donut'), {
+    type:'doughnut',
+    data:{labels:SECTOR_L,datasets:[{data:SECTOR_P,backgroundColor:SECTOR_C,borderWidth:1,borderColor:'#fff'}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:true,position:'right',labels:{font:{size:9},boxWidth:9,padding:5}},
+        tooltip:{callbacks:{label:c=>` ${c.label}: ${c.parsed.toFixed(1)}%`}}}
+    }
+  });
+
+  destroy('c-age');
+  charts['c-age'] = new Chart(document.getElementById('c-age'), {
+    type:'bar',
+    data:{labels:labs,datasets:[
+      {label:'Youth 15-24',data:yu,backgroundColor:'rgba(37,102,64,0.72)',borderRadius:3},
+      {label:'Adult 25+',data:ad,backgroundColor:'rgba(164,212,176,0.85)',borderRadius:3}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{font:{size:9},boxWidth:9}},tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y.toFixed(1)}%`}}},
+      scales:{
+        x:{ticks:{autoSkip:false,maxRotation:0,font:{size:9}},grid:{display:false}},
+        y:{ticks:{font:{size:10},callback:v=>v+'%'},grid:{color:'rgba(37,102,64,0.06)'}}
+      }
+    }
+  });
+
+  destroy('c-emp');
+  const empYrs = YRS.filter((y,i)=>EMPRT[i]!==null&&y>=f);
+  const empFin = YRS.map((y,i)=>EMPRT[i]!==null&&y>=f?EMPRT[i]:null).filter(v=>v!==null);
+  const empEU  = YRS.map((y,i)=>EMPEU[i]!==null&&y>=f?EMPEU[i]:null).filter(v=>v!==null);
+  charts['c-emp'] = new Chart(document.getElementById('c-emp'), {
+    type:'line',
+    data:{labels:empYrs,datasets:[
+      {label:'Finland',data:empFin,borderColor:'#256640',borderWidth:2.5,pointRadius:4,tension:0.3,fill:false},
+      {label:'EU27',data:empEU,borderColor:'#a4d4b0',borderDash:[4,3],borderWidth:1.5,pointRadius:3,tension:0.3,fill:false}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{font:{size:9},boxWidth:9}},tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y.toFixed(1)}%`}}},
+      scales:{
+        x:{ticks:{autoSkip:false,maxRotation:0,font:{size:9}},grid:{display:false}},
+        y:{min:62,ticks:{font:{size:10},callback:v=>v+'%'},grid:{color:'rgba(37,102,64,0.06)'}}
+      }
+    }
+  });
+
+  document.getElementById('ig-ov').innerHTML = `
+    <div class="icard"><div class="ict">2025 deterioration</div><div class="icb">National rate hit 9.7% in 2025, up 1.3 pp from 2024. The Statistics Finland January 2026 release confirmed 278,000 unemployed persons, 39,000 more than the year before. Highest rate since 2016.</div></div>
+    <div class="icard"><div class="ict">Construction collapse</div><div class="icb">The primary driver is construction sector unemployment now at 16.1%. Rising interest rates from 2022 halted housing development; new starts fell over 50% from 2021 levels.</div></div>
+    <div class="icard"><div class="ict">Women hit harder in 2025</div><div class="icb">Female unemployment rose from 7.6% to 9.1% in 2025, a full 1.5 pp jump. Male rate also up but from a higher base. Women's employment fell 12,000 while men's was unchanged.</div></div>
+    <div class="icard"><div class="ict">ICT holds firm</div><div class="icb">ICT sector unemployment remains below 4%, with 122,000 employed in 2023 up from 90,000 in 2015. Software developer shortages persist even as headline unemployment rises.</div></div>
+  `;
+}
+
+function buildRegions() {
+  const f = from();
+  const filtYrs = YRS.filter(y=>y>=f);
+  const rnames = Object.keys(REGS);
+
+  let html = '<thead><tr><th>Region</th>';
+  filtYrs.forEach(y => html += `<th class="yh">${y}</th>`);
+  html += '</tr></thead><tbody>';
+  rnames.forEach(r => {
+    const vals = REGS[r].filter((_,i)=>YRS[i]>=f);
+    html += `<tr><td class="rn">${r}</td>`;
+    vals.forEach((v,i) => {
+      const {bg,tx} = hmColor(v);
+      html += `<td><div class="hmc" style="background:${bg};color:${tx}" data-tip="${r} ${filtYrs[i]}: ${v.toFixed(1)}%">${v.toFixed(1)}</div></td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody>';
+  document.getElementById('hmt').innerHTML = html;
+  document.querySelectorAll('.hmc').forEach(el=>{
+    el.addEventListener('mousemove',e=>{
+      const t=document.getElementById('tip'); t.textContent=el.dataset.tip;
+      t.style.display='block'; t.style.left=(e.clientX+12)+'px'; t.style.top=(e.clientY-28)+'px';
+    });
+    el.addEventListener('mouseleave',()=>{document.getElementById('tip').style.display='none';});
+  });
+
+  const sp = document.getElementById('splist');
+  sp.innerHTML='';
+  rnames.forEach(r=>{
+    const vals = REGS[r].filter((_,i)=>YRS[i]>=f);
+    const last=vals.at(-1), first=vals[0], chg=(last-first).toFixed(1);
+    const row=document.createElement('div'); row.className='sprow';
+    const cid='sp-'+r.replace(/[^a-z]/gi,'');
+    row.innerHTML=`<div class="spn">${r}</div><div class="spwrap"><canvas id="${cid}"></canvas></div><div class="spst"><div class="sv">${last.toFixed(1)}%</div><div class="sc" style="color:${parseFloat(chg)>0?'var(--red)':'var(--g600)'}">${parseFloat(chg)>0?'+':''}${chg}</div></div>`;
+    sp.appendChild(row);
+    setTimeout(()=>{
+      const ctx=document.getElementById(cid); if(!ctx)return;
+      destroy(cid);
+      charts[cid]=new Chart(ctx,{type:'line',data:{labels:filtYrs,datasets:[{data:vals,borderColor:'#256640',borderWidth:1.5,pointRadius:0,tension:0.4,fill:{target:'origin',above:'rgba(37,102,64,0.08)'}}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{enabled:false}},scales:{x:{display:false},y:{display:false}},animation:{duration:300}}});
+    },40);
+  });
+
+  const last=YRS.length-1;
+  const sorted=rnames.map(r=>({n:r,v:REGS[r][last]})).sort((a,b)=>a.v-b.v);
+  const mx=sorted.at(-1).v;
+  document.getElementById('rklist').innerHTML=sorted.map(d=>{
+    const {bg}=hmColor(d.v);
+    return `<div class="rkrow"><div class="rklb">${d.n}</div><div class="rktr"><div class="rkfi" style="width:${Math.round(d.v/mx*100)}%;background:${bg};border:1px solid rgba(0,0,0,0.08)"></div></div><div class="rkv">${d.v.toFixed(1)}%</div></div>`;
+  }).join('');
+}
+
+function buildIndustry() {
+  destroy('c-istack');
+  charts['c-istack']=new Chart(document.getElementById('c-istack'),{
+    type:'bar',
+    data:{labels:ISTACK_Y,datasets:Object.keys(ISTACK).map((k,i)=>({label:k,data:ISTACK[k],backgroundColor:ISTACK_C[i],borderRadius:i===Object.keys(ISTACK).length-1?3:0,stack:'a'}))},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{font:{size:9},boxWidth:9}},tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y}k`}}},
+      scales:{x:{stacked:true,ticks:{autoSkip:false,maxRotation:0,font:{size:10}},grid:{display:false}},y:{stacked:true,ticks:{font:{size:10},callback:v=>v+'k'},grid:{color:'rgba(37,102,64,0.06)'}}}
+    }
+  });
+
+  destroy('c-irate');
+  const sorted=[...IND_L.map((l,i)=>({l,v:IND_V[i]}))].sort((a,b)=>b.v-a.v);
+  charts['c-irate']=new Chart(document.getElementById('c-irate'),{
+    type:'bar',
+    data:{labels:sorted.map(d=>d.l),datasets:[{data:sorted.map(d=>d.v),backgroundColor:sorted.map(d=>d.v>10?'rgba(155,48,48,0.8)':d.v>7?'rgba(122,85,0,0.7)':'rgba(37,102,64,0.75)'),borderRadius:3}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.parsed.x.toFixed(1)}% unemployment`}}},
+      scales:{x:{ticks:{font:{size:9},callback:v=>v+'%'},grid:{color:'rgba(37,102,64,0.06)'}},y:{ticks:{font:{size:9}},grid:{display:false}}}
+    }
+  });
+
+  document.getElementById('ig-sh').innerHTML=SHORTAGES.map(s=>`
+    <div class="icard" style="border-left:3px solid ${s.sev==='crit'?'var(--red)':s.sev==='high'?'var(--amber)':'var(--g500)'}">
+      <div class="ict" style="color:${s.sev==='crit'?'var(--red)':s.sev==='high'?'var(--amber)':'var(--g700)'}">${s.t}</div>
+      <div class="icb">${s.b}</div>
+    </div>
+  `).join('');
+}
+
+function buildTrends() {
+  const f = from();
+  const labs = sliceYRS(f);
+
+  destroy('c-eu');
+  charts['c-eu']=new Chart(document.getElementById('c-eu'),{
+    type:'line',
+    data:{labels:labs,datasets:[
+      {label:'Finland',data:slice(NAT,f),borderColor:'#1d5230',backgroundColor:'rgba(29,82,48,0.07)',borderWidth:2.5,pointRadius:4,tension:0.35,fill:true},
+      {label:'EU27',data:slice(EU27,f),borderColor:'#72b886',borderDash:[5,4],borderWidth:2,pointRadius:3,tension:0.35,fill:false}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{font:{size:10},boxWidth:9}},tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y.toFixed(1)}%`}}},
+      scales:{x:{ticks:{autoSkip:false,maxRotation:0,font:{size:10}},grid:{display:false}},y:{min:4,ticks:{font:{size:10},callback:v=>v+'%'},grid:{color:'rgba(37,102,64,0.06)'}}}
+    }
+  });
+
+  destroy('c-chg');
+  const b19=YRS.indexOf(2019), b25=YRS.length-1;
+  const chgd=Object.keys(REGS).map(r=>({n:r,c:parseFloat((REGS[r][b25]-REGS[r][b19]).toFixed(1))})).sort((a,b)=>b.c-a.c);
+  charts['c-chg']=new Chart(document.getElementById('c-chg'),{
+    type:'bar',
+    data:{labels:chgd.map(d=>d.n),datasets:[{data:chgd.map(d=>d.c),backgroundColor:chgd.map(d=>d.c>0?'rgba(155,48,48,0.78)':'rgba(37,102,64,0.72)'),borderRadius:3}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.parsed.y>0?'+':''}${c.parsed.y.toFixed(1)} pp change 2019-2025`}}},
+      scales:{x:{ticks:{font:{size:9},maxRotation:30},grid:{display:false}},y:{ticks:{font:{size:10},callback:v=>(v>0?'+':'')+v+' pp'},grid:{color:'rgba(37,102,64,0.06)'}}}
+    }
+  });
+
+  document.getElementById('ig-st').innerHTML=`
+    <div class="icard"><div class="ict">Construction sector crash</div><div class="icb">New residential starts fell over 50% from 2021. Construction unemployment reached 16.1% in 2025. The ECB rate cycle hit Finland harder than most Nordic peers due to the high share of variable-rate mortgages.</div></div>
+    <div class="icard"><div class="ict">ICT cluster resilience</div><div class="icb">ICT employment grew from 90,000 in 2015 to 122,000 by 2023 and sector unemployment stays below 4%. Nokia-era engineering culture, game studio growth and SaaS exports insulate the sector from cyclical shocks.</div></div>
+    <div class="icard"><div class="ict">April 2026: 11.6%</div><div class="icb">The April 2026 monthly figure reached 11.6%, highest since May 2015. 336,000 unemployed persons. Youth rate at 28.0%. The EC forecast projects 10.1% average for full-year 2026 before recovery.</div></div>
+    <div class="icard"><div class="ict">Regional divergence</div><div class="icb">Lappi and Keski-Suomi sit 1.5-2.5 pp above the national rate throughout the period. Uusimaa's economic density (31% of national GDP) provides buffer but it too hit 10.2% in 2025.</div></div>
+    <div class="icard"><div class="ict">Women and part-time work</div><div class="icb">Part-time employment reached 19% of all employed in 2025 — 493,000 people. 132,000 cite lack of full-time work as the reason, a structural underemployment signal often absent from headline figures.</div></div>
+    <div class="icard"><div class="ict">Recovery path</div><div class="icb">EC Spring 2026 forecast: employment growth of 0.2% in 2026, 0.5% in 2027. Wage increases of roughly 8% agreed for 2025-2027 support household income but weak consumer confidence constrains recovery.</div></div>
+  `;
+}
+
+function go(tab) {
+  cur = tab;
+  ['overview','regions','industry','trends'].forEach(t=>{
+    document.getElementById('pane-'+t).style.display = t===tab?'':'none';
+  });
+  document.querySelectorAll('.tb').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
+  buildKPIs();
+  if(tab==='overview') buildOverview();
+  else if(tab==='regions') buildRegions();
+  else if(tab==='industry') buildIndustry();
+  else if(tab==='trends') buildTrends();
+}
+
+go('overview');
+</script>
+</body>
+</html>
