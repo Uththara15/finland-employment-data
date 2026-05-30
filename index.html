@@ -226,7 +226,7 @@ table.hm td.rn { font-size: 0.68rem; color: var(--ink2); white-space: nowrap; pa
     <div class="slabel">Regional breakdown</div>
     <div class="g2">
       <div class="panel">
-        <div class="ph"><span class="pt">Unemployment heatmap by region 2015-2025</span><span class="pm">Annual % — hover cell for value</span></div>
+        <div class="ph"><span class="pt">Unemployment heatmap by region 2015-2025</span><span class="pm">Annual % - hover cell for value</span></div>
         <div class="hmwrap"><table class="hm" id="hmt"></table></div>
       </div>
       <div class="panel">
@@ -248,7 +248,7 @@ table.hm td.rn { font-size: 0.68rem; color: var(--ink2); white-space: nowrap; pa
         <div class="ch h300"><canvas id="c-istack" role="img" aria-label="Stacked employment by industry Finland 2015-2023."></canvas></div>
       </div>
       <div class="panel">
-        <div class="ph"><span class="pt">Unemployment rate by sector 2025</span><span class="pm">Percent — red above 10%, amber 7-10%</span></div>
+        <div class="ph"><span class="pt">Unemployment rate by sector 2025</span><span class="pm">Percent - red above 10%, amber 7-10%</span></div>
         <div class="ch h300"><canvas id="c-irate" role="img" aria-label="Unemployment rate by sector Finland 2025."></canvas></div>
       </div>
     </div>
@@ -337,12 +337,12 @@ const IND_L = ["Construction","Admin & support","Agriculture","Wholesale & retai
 const IND_V = [16.1,13.5,12.2,10.4,9.1,8.3,4.5,4.0,3.8,3.5];
 
 const SHORTAGES = [
-  {t:"Healthcare professionals",b:"Doctors, nurses, health care assistants — worsening shortage as population ages and emigration continues",sev:"crit"},
+  {t:"Healthcare professionals",b:"Doctors, nurses, health care assistants - worsening shortage as population ages and emigration continues",sev:"crit"},
   {t:"Software developers",b:"Full-stack, embedded systems and AI/ML engineers. ICT sector unemployment below 4% despite national rise",sev:"high"},
   {t:"Early childhood educators",b:"Nationwide gap in daycare and preschool; government expansion plans outpace available trained staff",sev:"high"},
   {t:"Welders and metalworkers",b:"Manufacturing sector skills gap deepened; average age of skilled workers rising",sev:"med"},
   {t:"HGV and logistics drivers",b:"Pandemic-era exits not replaced; AGV automation slow to compensate",sev:"med"},
-  {t:"Construction project managers",b:"Despite sector unemployment at 16%, qualified project managers remain scarce — mismatch problem",sev:"med"},
+  {t:"Construction project managers",b:"Despite sector unemployment at 16%, qualified project managers remain scarce - mismatch problem",sev:"med"},
 ];
 
 let cur = 'overview';
@@ -391,7 +391,7 @@ function buildKPIs() {
       <div class="kt">National 2025</div>
       <div class="kv">${curr}%</div>
       <div class="kd up">+${diff} pp vs 2024</div>
-      <div class="ks">Highest since 2016 — Statistics Finland</div>
+      <div class="ks">Highest since 2016 - Statistics Finland</div>
     </div>
     <div class="kcard">
       <div class="kt">Employment rate 2025</div>
@@ -409,7 +409,7 @@ function buildKPIs() {
       <div class="kt">Youth rate 2025</div>
       <div class="kv">${youth}%</div>
       <div class="kd up">+2.8 pp vs 2024</div>
-      <div class="ks">15-24 age group — World Bank</div>
+      <div class="ks">15-24 age group - World Bank</div>
     </div>
     <div class="kcard">
       <div class="kt">Best region 2025</div>
@@ -622,7 +622,7 @@ function buildTrends() {
     <div class="icard"><div class="ict">ICT cluster resilience</div><div class="icb">ICT employment grew from 90,000 in 2015 to 122,000 by 2023 and sector unemployment stays below 4%. Nokia-era engineering culture, game studio growth and SaaS exports insulate the sector from cyclical shocks.</div></div>
     <div class="icard"><div class="ict">April 2026: 11.6%</div><div class="icb">The April 2026 monthly figure reached 11.6%, highest since May 2015. 336,000 unemployed persons. Youth rate at 28.0%. The EC forecast projects 10.1% average for full-year 2026 before recovery.</div></div>
     <div class="icard"><div class="ict">Regional divergence</div><div class="icb">Lappi and Keski-Suomi sit 1.5-2.5 pp above the national rate throughout the period. Uusimaa's economic density (31% of national GDP) provides buffer but it too hit 10.2% in 2025.</div></div>
-    <div class="icard"><div class="ict">Women and part-time work</div><div class="icb">Part-time employment reached 19% of all employed in 2025 — 493,000 people. 132,000 cite lack of full-time work as the reason, a structural underemployment signal often absent from headline figures.</div></div>
+    <div class="icard"><div class="ict">Women and part-time work</div><div class="icb">Part-time employment reached 19% of all employed in 2025 - 493,000 people. 132,000 cite lack of full-time work as the reason, a structural underemployment signal often absent from headline figures.</div></div>
     <div class="icard"><div class="ict">Recovery path</div><div class="icb">EC Spring 2026 forecast: employment growth of 0.2% in 2026, 0.5% in 2027. Wage increases of roughly 8% agreed for 2025-2027 support household income but weak consumer confidence constrains recovery.</div></div>
   `;
 }
